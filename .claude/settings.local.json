@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -H \"User-Agent: Mozilla/5.0\" -H \"Accept: application/json\" \"https://gcsservices.careers.microsoft.com/search/api/v1/search?q=software+engineer&lc=United+States&pg=1&pgSz=20&o=Relevance&flt=true\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" -H \"Accept: application/json\" \"https://gcsservices.careers.microsoft.com/search/api/v1/search?q=software+engineer&lc=United+States&pg=1&pgSz=20&o=Relevance&flt=true\")",
+      "Bash(curl -s -w \"\\\\n%{http_code}\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" -H \"Accept: application/json\" \"https://gcsservices.careers.microsoft.com/search/api/v1/search?q=software+engineer&pg=1&pgSz=5&o=Relevance&flt=true\")",
+      "Bash(curl -s -w \"\\\\nHTTP_CODE:%{http_code}\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/131.0.0.0 Safari/537.36\" -H \"Accept: application/json\" \"https://gcsservices.careers.microsoft.com/search/api/v1/search?q=software%20engineer&lc=United%20States&pg=1&pgSz=5&o=Relevance&flt=true\")",
+      "WebFetch(domain:jobs.careers.microsoft.com)",
+      "WebFetch(domain:careers.microsoft.com)",
+      "Bash(dotnet add package Microsoft.Playwright --version 1.51.0)",
+      "Bash(dotnet test JobTracker.Tests --filter \"Category=Discovery\" --verbosity normal --logger \"console;verbosity=detailed\")",
+      "Bash(dotnet test JobTracker.Tests --filter \"Category=Discovery\" --verbosity quiet)",
+      "WebFetch(domain:blog.emilianbold.ro)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:fantastic.jobs)",
+      "WebFetch(domain:apply.careers.microsoft.com)",
+      "WebFetch(domain:microsoftai.eightfold.ai)",
+      "Bash(dotnet test JobTracker.Tests --filter \"CaptureSearchApiResponse\" --logger \"console;verbosity=detailed\" --no-build)",
+      "Bash(dotnet build JobTracker.Tests --no-restore -q)",
+      "Bash(dotnet build JobTracker.Tests -v detailed)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://apply.careers.microsoft.com/api/pcsx/search?domain=microsoft.com&query=software+engineer&location=United+States&start=0\" -H \"User-Agent: Mozilla/5.0\")",
+      "Bash(curl -s \"https://apply.careers.microsoft.com/api/pcsx/search?domain=microsoft.com&query=software+engineer&location=United+States&start=0\" -H \"User-Agent: Mozilla/5.0\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d, indent=2\\)[:3000]\\)\")",
+      "Bash(powershell -Command \"$input | ConvertFrom-Json | ConvertTo-Json -Depth 5\")",
+      "Bash(curl -s \"https://apply.careers.microsoft.com/api/pcsx/position_details?position_id=1970393556734831&domain=microsoft.com&hl=en\" -H \"User-Agent: Mozilla/5.0\")",
+      "Bash(curl -s \"https://apply.careers.microsoft.com/api/pcsx/position_details?position_id=1970393556734831&domain=microsoft.com&hl=en\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/134.0.0.0 Safari/537.36\" -H \"Referer: https://apply.careers.microsoft.com/careers\" -H \"Accept: application/json\")",
+      "Bash(curl -s -c \"D:\\\\Documents\\\\Jobs\\\\Prospects\\\\Tools\\\\JobTracker\\\\cookies.txt\" \"https://apply.careers.microsoft.com/careers\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -b \"D:\\\\Documents\\\\Jobs\\\\Prospects\\\\Tools\\\\JobTracker\\\\cookies.txt\" \"https://apply.careers.microsoft.com/api/pcsx/position_details?position_id=1970393556734831&domain=microsoft.com&hl=en\" -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" -H \"Accept: application/json\")",
+      "Bash(dotnet restore)",
+      "Bash(dotnet build --no-restore)",
+      "Bash(dotnet test JobTracker.Tests --no-build --logger \"console;verbosity=detailed\")",
+      "Bash(ls \"D:\\\\Documents\\\\Jobs\\\\Prospects\\\\Tools\\\\JobTracker\\\\JobTracker.Console\\\\bin\\\\Debug\\\\net10.0\\\\appsettings\"*)",
+      "Bash(ls \"D:\\\\Documents\\\\Jobs\\\\Prospects\\\\Tools\\\\JobTracker\\\\JobTracker.Service\\\\bin\\\\Debug\\\\net10.0\\\\appsettings\"*)",
+      "Bash(ls \"D:\\\\Documents\\\\Jobs\\\\Prospects\\\\Tools\\\\JobTracker\\\\JobTracker.WinForms\\\\bin\\\\Debug\\\\net10.0-windows\\\\appsettings\"*)",
+      "Bash(dotnet build -q)",
+      "Bash(dotnet restore JobTracker.Tests)",
+      "Bash(dotnet test --filter \"Category!=Functional&Category!=Discovery\" --verbosity normal)",
+      "Bash(dotnet test --verbosity normal)"
+    ]
+  }
+}

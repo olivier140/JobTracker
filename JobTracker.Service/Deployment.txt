@@ -1,0 +1,14 @@
+﻿ #
+ #   Install / Uninstall the Service
+ #   
+ # Build
+dotnet publish -c Release -o C:\Services\JobTracker
+
+# Install (run as Administrator)
+sc create JobTracker binPath="C:\Services\JobTracker\JobTracker.Service.exe" start=auto
+sc description JobTracker "Scrapes Microsoft careers and scores jobs via Claude AI"
+sc start JobTracker
+
+# Uninstall
+sc stop JobTracker
+sc delete JobTracker
