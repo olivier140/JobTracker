@@ -1,14 +1,15 @@
 <Solution>
-  <Project Path="JobTracker.Core/JobTracker.Core.csproj" />
-  <Project Path="JobTracker.Service/JobTracker.Service.csproj" />
-  <Project Path="JobTracker.Tests/JobTracker.Tests.csproj" />
-  <Project Path="JobTracker.WinForms/JobTracker.WinForms.csproj" />
   <Folder Name="/Database/">
     <File Path="Common/JobTracker Creation.sql" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Common/Jobs.sql" />
+    <File Path="LICENSE.txt" />
     <File Path="README.md" />
   </Folder>
   <Project Path="JobTracker.Console/JobTracker.Console.csproj" />
+  <Project Path="JobTracker.Core/JobTracker.Core.csproj" />
+  <Project Path="JobTracker.Service/JobTracker.Service.csproj" />
+  <Project Path="JobTracker.Tests/JobTracker.Tests.csproj" />
+  <Project Path="JobTracker.WinForms/JobTracker.WinForms.csproj" />
 </Solution>
