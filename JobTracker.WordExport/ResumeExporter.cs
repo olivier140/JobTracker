@@ -43,7 +43,7 @@ public sealed class ResumeExporter : IResumeExporter
         try
         {
             await using var stream = new FileStream(
-                filePath, FileMode.Create, FileAccess.Write, FileShare.None,
+                filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None,
                 bufferSize: 4096, useAsync: true);
 
             ResumeDocumentBuilder.Build(stream, match, job);
