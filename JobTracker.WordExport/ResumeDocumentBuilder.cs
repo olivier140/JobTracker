@@ -28,7 +28,7 @@ internal static class ResumeDocumentBuilder
     /// </summary>
     internal static void Build(Stream target, JobMatch match, ScrapedJob job)
     {
-        using var doc = WordprocessingDocument.Create(target, WordprocessingDocumentType.Document, false);
+        using var doc = WordprocessingDocument.Create(target, WordprocessingDocumentType.Document, true);
 
         var mainPart = doc.AddMainDocumentPart();
         mainPart.Document = new Document();

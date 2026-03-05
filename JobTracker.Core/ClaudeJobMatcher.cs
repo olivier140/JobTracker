@@ -222,6 +222,16 @@ public class ClaudeJobMatcher : IJobMatcher
                     }
                 }
             }, ct);
-        return response.Content.OfType<TextContent>().FirstOrDefault()?.Text;
+        
+        var text = response.Content.OfType<TextContent>().FirstOrDefault()?.Text;
+        
+        // Strip markdown code block formatting if present (e.g., ```json ... ```
+        if (text != null && text.StartsWith("```"))
+        {
+            var lines = text.Split('\n');
+            text = string.Join('\n', lines.Skip(1).TakeWhile(l => !l.StartsWith("```")));
+        }
+        
+        return text;
     }
 }
