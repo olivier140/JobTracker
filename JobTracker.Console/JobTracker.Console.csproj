@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\JobTracker.Core\JobTracker.Core.csproj" />
+    <ProjectReference Include="..\JobTracker.WordExport\JobTracker.WordExport.csproj" />
   </ItemGroup>
 
   <ItemGroup>

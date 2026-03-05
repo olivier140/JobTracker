@@ -1,5 +1,6 @@
 ﻿// JobTracker.WinForms/MainForm.cs
 using JobTracker.Core;
+using JobTracker.WordExport;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
@@ -18,6 +19,7 @@ public partial class MainForm : Form
     private readonly IJobScraper _scraper;
     private readonly IJobMatcher _matcher;
     private readonly AppSettings _settings;
+    private readonly IResumeExporter _exporter;
 
     #region Controls 
 
@@ -32,6 +34,7 @@ public partial class MainForm : Form
     private Button _btnScrape = null!;
     private Button _btnScore = null!;
     private Button _btnViewResume = null!;
+    private Button _btnExportResume = null!;
     private Button _btnUpdateStatus = null!;
     private ComboBox _cmbStatus = null!;
     private Panel _statsPanel = null!;
@@ -46,16 +49,19 @@ public partial class MainForm : Form
     /// <param name="scraper">The job scraper responsible for retrieving job postings from external sources. Cannot be null.</param>
     /// <param name="matcher">The job matcher used to match job postings to user criteria. Cannot be null.</param>
     /// <param name="settings">The application settings that configure the behavior of the form. Cannot be null.</param>
+    /// <param name="exporter">The resume exporter used to write tailored resumes to Word documents. Cannot be null.</param>
     public MainForm(
         IDbContextFactory<JobTrackerDbContext> dbFactory,
         IJobScraper scraper,
         IJobMatcher matcher,
-        AppSettings settings)
+        AppSettings settings,
+        IResumeExporter exporter)
     {
         _dbFactory = dbFactory;
         _scraper = scraper;
         _matcher = matcher;
         _settings = settings;
+        _exporter = exporter;
 
         InitializeComponent();
         WireEvents();
@@ -138,7 +144,8 @@ public partial class MainForm : Form
         // Matches grid + action buttons
         _gridMatches = BuildGrid();
         _btnViewResume = new Button { Text = "View Tailored Resume", Width = 180, Height = 28 };
-        var matchBottom = BuildActionBar(_btnViewResume);
+        _btnExportResume = new Button { Text = "⬇  Export to Word", Width = 160, Height = 28 };
+        var matchBottom = BuildActionBar(_btnViewResume, _btnExportResume);
         var matchPanel = new Panel { Dock = DockStyle.Fill };
         matchPanel.Controls.Add(_gridMatches);
         matchPanel.Controls.Add(matchBottom);
@@ -266,6 +273,7 @@ public partial class MainForm : Form
         _btnScrape.Click += async (_, _) => await RunScrapeAsync();
         _btnScore.Click += async (_, _) => await RunScoreAsync();
         _btnViewResume.Click += OnViewResume;
+        _btnExportResume.Click += async (_, _) => await OnExportResumeAsync();
         _btnUpdateStatus.Click += async (_, _) => await OnUpdateStatusAsync();
 
         Load += async (_, _) =>
@@ -533,6 +541,47 @@ public partial class MainForm : Form
                 viewer.Show(this);
             });
         });
+    }
+
+    /// <summary>
+    /// Exports the tailored resume for the selected match to a Word document and prompts
+    /// the user to open the containing folder on success.
+    /// </summary>
+    private async Task OnExportResumeAsync()
+    {
+        if (_gridMatches.SelectedRows.Count == 0) return;
+        var id = (int)_gridMatches.SelectedRows[0].Cells["Id"].Value;
+
+        SetBusy(true, "Exporting resume to Word…");
+        try
+        {
+            var result = await _exporter.ExportAsync(id);
+            if (result.Success)
+            {
+                Log($"Exported: {result.FilePath}");
+                if (MessageBox.Show(
+                        $"Resume exported successfully.\n\n{result.FilePath}\n\nOpen folder?",
+                        "Export Complete", MessageBoxButtons.YesNo, MessageBoxIcon.Information)
+                    == DialogResult.Yes)
+                {
+                    Process.Start("explorer.exe", $"/select,\"{result.FilePath}\"");
+                }
+            }
+            else
+            {
+                Log($"Export failed: {result.Error}", Color.OrangeRed);
+                MessageBox.Show($"Export failed:\n{result.Error}",
+                    "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"Export error: {ex.Message}", Color.OrangeRed);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
     }
 
     /// <summary>

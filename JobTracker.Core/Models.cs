@@ -245,6 +245,18 @@ public class AppSettings
     public string Resume { get; set; } = "";
     public string ResumePath { get; set; } = "";
 
+    /// <summary>
+    /// Directory where exported Word documents are saved.
+    /// Defaults to <c>%USERPROFILE%\Documents\JobTracker\Resumes\</c> when empty.
+    /// </summary>
+    public string ExportPath { get; set; } = "";
+
+    /// <summary>
+    /// When true the Console and Service projects automatically export a Word document
+    /// for every match that meets <see cref="MinScoreToApply"/> after scoring.
+    /// </summary>
+    public bool AutoExportOnScore { get; set; } = false;
+
     public string GetResume() =>
         !string.IsNullOrEmpty(ResumePath) && File.Exists(ResumePath)
             ? File.ReadAllText(ResumePath)
