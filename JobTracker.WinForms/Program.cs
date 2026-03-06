@@ -1,5 +1,6 @@
 // JobTracker.WinForms/Program.cs
 using JobTracker.Core;
+using JobTracker.WordExport;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,6 +66,7 @@ internal static class Program
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddJobTrackerCore(settings);
+        services.AddWordExport();
         services.AddTransient<MainForm>();
         Services = services.BuildServiceProvider();
 

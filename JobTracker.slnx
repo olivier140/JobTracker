@@ -12,4 +12,5 @@
   <Project Path="JobTracker.Service/JobTracker.Service.csproj" />
   <Project Path="JobTracker.Tests/JobTracker.Tests.csproj" />
   <Project Path="JobTracker.WinForms/JobTracker.WinForms.csproj" />
+  <Project Path="JobTracker.WordExport/JobTracker.WordExport.csproj" />
 </Solution>
