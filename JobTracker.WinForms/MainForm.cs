@@ -360,7 +360,7 @@ public partial class MainForm : Form
                 j.Title,
                 j.Location,
                 Posted = j.PostedDate.HasValue ? j.PostedDate.Value.ToString("yyyy-MM-dd") : "",
-                Scraped = j.ScrapedAt.ToString("yyyy-MM-dd HH:mm"),
+                Scraped = j.ScrapedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm"),
                 Scored = j.Match != null ? "Yes" : "No",
                 j.Url
             }).ToListAsync();

@@ -40,7 +40,8 @@
       "Bash(xargs grep -l \"Document\\\\|Word\\\\|docx\\\\|OpenXml\\\\|DOCX\")",
       "Bash(dotnet build JobTracker.WordExport/JobTracker.WordExport.csproj)",
       "Bash(dotnet build JobTracker.slnx)",
-      "Bash(dotnet test JobTracker.Tests/JobTracker.Tests.csproj --filter \"FullyQualifiedName~ResumeExporterTests\" --logger \"console;verbosity=normal\")"
+      "Bash(dotnet test JobTracker.Tests/JobTracker.Tests.csproj --filter \"FullyQualifiedName~ResumeExporterTests\" --logger \"console;verbosity=normal\")",
+      "Bash(dotnet build JobTracker.WinForms/JobTracker.WinForms.csproj)"
     ]
   }
 }
