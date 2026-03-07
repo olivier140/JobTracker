@@ -46,7 +46,9 @@
       "Bash(dotnet build JobTracker.Messaging/JobTracker.Messaging.csproj)",
       "WebFetch(domain:www.nuget.org)",
       "Bash(dotnet build JobTracker.Console/JobTracker.Console.csproj)",
-      "Bash(dotnet test JobTracker.Tests/JobTracker.Tests.csproj --verbosity normal)"
+      "Bash(dotnet test JobTracker.Tests/JobTracker.Tests.csproj --verbosity normal)",
+      "Bash(dotnet build --no-restore -v q)",
+      "Bash(dotnet test JobTracker.Tests --no-build -v q)"
     ]
   }
 }

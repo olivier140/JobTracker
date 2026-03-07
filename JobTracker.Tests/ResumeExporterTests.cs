@@ -113,36 +113,118 @@ public class ResumeExporterTests
     }
 
     // -----------------------------------------------------------------------
-    // ResumeExporter.BuildFileName
+    // ResumeExporter.BuildResumeFileName / BuildCoverLetterFileName
     // -----------------------------------------------------------------------
 
     [Test]
-    public void BuildFileName_ContainsJobId()
+    public void BuildResumeFileName_ContainsJobId()
     {
         var job = new ScrapedJob { JobId = "12345", Title = "Engineer" };
-        var name = ResumeExporter.BuildFileName(job);
+        var name = ResumeExporter.BuildResumeFileName(job);
         Assert.That(name, Does.Contain("12345"));
     }
 
     [Test]
-    public void BuildFileName_HasDocxExtension()
+    public void BuildResumeFileName_HasDocxExtension()
     {
         var job = new ScrapedJob { JobId = "42", Title = "Developer" };
-        var name = ResumeExporter.BuildFileName(job);
+        var name = ResumeExporter.BuildResumeFileName(job);
         Assert.That(name, Does.EndWith(".docx"));
     }
 
     [Test]
-    public void BuildFileName_ContainsTodaysDate()
+    public void BuildResumeFileName_ContainsTodaysDate()
     {
         var job = new ScrapedJob { JobId = "1", Title = "X" };
-        var name = ResumeExporter.BuildFileName(job);
+        var name = ResumeExporter.BuildResumeFileName(job);
         Assert.That(name, Does.Contain(DateTime.Now.ToString("yyyy-MM-dd")));
+    }
+
+    [Test]
+    public void BuildCoverLetterFileName_StartsWithCoverLetter()
+    {
+        var job = new ScrapedJob { JobId = "99", Title = "Developer" };
+        var name = ResumeExporter.BuildCoverLetterFileName(job);
+        Assert.That(name, Does.StartWith("CoverLetter_"));
+    }
+
+    [Test]
+    public void BuildCoverLetterFileName_ContainsJobId()
+    {
+        var job = new ScrapedJob { JobId = "99", Title = "Developer" };
+        var name = ResumeExporter.BuildCoverLetterFileName(job);
+        Assert.That(name, Does.Contain("99"));
+    }
+
+    // -----------------------------------------------------------------------
+    // CoverLetterDocumentBuilder — document structure
+    // -----------------------------------------------------------------------
+
+    [Test]
+    public void CoverLetter_Build_ProducesNonEmptyStream()
+    {
+        var (match, job) = MakeCoverLetterTestData();
+        using var ms = new MemoryStream();
+
+        CoverLetterDocumentBuilder.Build(ms, match, job);
+
+        Assert.That(ms.Length, Is.GreaterThan(0));
+    }
+
+    [Test]
+    public void CoverLetter_Build_ProducesValidOpenXmlDocument()
+    {
+        var (match, job) = MakeCoverLetterTestData();
+        using var ms = new MemoryStream();
+
+        CoverLetterDocumentBuilder.Build(ms, match, job);
+
+        ms.Position = 0;
+        using var doc = WordprocessingDocument.Open(ms, isEditable: false);
+        Assert.That(doc.MainDocumentPart, Is.Not.Null);
+        Assert.That(doc.MainDocumentPart!.Document.Body, Is.Not.Null);
+    }
+
+    [Test]
+    public void CoverLetter_Build_WithNullCoverLetter_ProducesValidDocument()
+    {
+        var (match, job) = MakeCoverLetterTestData();
+        match.CoverLetter = null;
+
+        using var ms = new MemoryStream();
+        CoverLetterDocumentBuilder.Build(ms, match, job);
+
+        ms.Position = 0;
+        using var doc = WordprocessingDocument.Open(ms, isEditable: false);
+        Assert.That(doc.MainDocumentPart, Is.Not.Null);
     }
 
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
+
+    private static (JobMatch match, ScrapedJob job) MakeCoverLetterTestData()
+    {
+        var (match, job) = MakeTestData();
+        match.CoverLetter = """
+            Jane Doe
+            jane.doe@example.com | (555) 000-1234
+
+            March 7, 2026
+
+            Dear Hiring Manager,
+
+            I am excited to apply for the Senior Software Engineer position at Acme Corp.
+
+            My 10+ years of experience with C# and .NET directly aligns with your requirements.
+
+            I look forward to discussing how I can contribute to your team.
+
+            Sincerely,
+            Jane Doe
+            """;
+        return (match, job);
+    }
 
     private static (JobMatch match, ScrapedJob job) MakeTestData()
     {

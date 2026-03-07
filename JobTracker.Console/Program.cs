@@ -97,7 +97,7 @@ try
 
     if (exportWord)
     {
-        Console.WriteLine("Exporting tailored resumes to Word...");
+        Console.WriteLine("Exporting tailored resumes and cover letters to Word...");
         var exporter = sp.GetRequiredService<IResumeExporter>();
         var dbFactory = sp.GetRequiredService<IDbContextFactory<JobTrackerDbContext>>();
 
@@ -113,7 +113,9 @@ try
             var result = await exporter.ExportAsync(match, match.ScrapedJob!, CancellationToken.None);
             if (result.Success)
             {
-                Console.WriteLine($"  Exported: {result.FilePath}");
+                Console.WriteLine($"  Resume:      {result.FilePath}");
+                if (result.CoverLetterFilePath != null)
+                    Console.WriteLine($"  Cover Letter:{result.CoverLetterFilePath}");
                 exported++;
 
                 // Send export notification to the bus
@@ -132,6 +134,7 @@ try
                             Score = match.Score,
                             RecommendApply = match.RecommendApply,
                             ExportedFilePath = result.FilePath!,
+                            CoverLetterFilePath = result.CoverLetterFilePath,
                             ExportedAtUtc = DateTime.UtcNow
                         });
                     }

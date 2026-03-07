@@ -219,6 +219,8 @@ Two environment variables are required at runtime:
 |----------|---------|
 | `ANTHROPIC_API_KEY` | Anthropic API key for Claude |
 | `JOBTRACKER_RESUME` | Your resume text for job matching |
+| `JOBTRACKER_TAILORED` | Output location for tailored resume and cover letter |
+
 
 ## NServiceBus Messaging
 

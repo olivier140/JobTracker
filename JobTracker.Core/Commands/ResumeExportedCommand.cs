@@ -24,5 +24,6 @@ public class ResumeExportedCommand
 
     // ── Export details ───────────────────────────────────────────────
     public string ExportedFilePath { get; set; } = "";
+    public string? CoverLetterFilePath { get; set; }
     public DateTime ExportedAtUtc { get; set; }
 }

@@ -4,7 +4,7 @@ using JobTracker.Core;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
-/// Default implementation of <see cref="IResumeExporter"/>. Writes tailored resumes as
+/// Default implementation of <see cref="IResumeExporter"/>. Writes tailored resumes and cover letters as
 /// .docx files to <c>%USERPROFILE%\Documents\JobTracker\Resumes\</c> (or the path
 /// configured in <c>AppSettings.ExportPath</c>).
 /// </summary>
@@ -38,7 +38,7 @@ public sealed class ResumeExporter : IResumeExporter
             return new ExportResult(false, null, $"Cannot create output directory '{outputDir}': {ex.Message}");
         }
 
-        var filePath = Path.Combine(outputDir, BuildFileName(job));
+        var filePath = Path.Combine(outputDir, BuildResumeFileName(job));
 
         try
         {
@@ -48,13 +48,34 @@ public sealed class ResumeExporter : IResumeExporter
 
             ResumeDocumentBuilder.Build(stream, match, job);
             await stream.FlushAsync(ct);
-
-            return new ExportResult(true, filePath, null);
         }
         catch (Exception ex)
         {
-            return new ExportResult(false, null, $"Failed to write document: {ex.Message}");
+            return new ExportResult(false, null, $"Failed to write resume document: {ex.Message}");
         }
+
+        // Export cover letter if available.
+        string? coverLetterPath = null;
+        if (!string.IsNullOrWhiteSpace(match.CoverLetter))
+        {
+            coverLetterPath = Path.Combine(outputDir, BuildCoverLetterFileName(job));
+            try
+            {
+                await using var stream = new FileStream(
+                    coverLetterPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None,
+                    bufferSize: 4096, useAsync: true);
+
+                CoverLetterDocumentBuilder.Build(stream, match, job);
+                await stream.FlushAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                // Non-fatal: resume succeeded, report cover letter failure in Error.
+                return new ExportResult(true, filePath, $"Cover letter export failed: {ex.Message}");
+            }
+        }
+
+        return new ExportResult(true, filePath, null, coverLetterPath);
     }
 
     /// <inheritdoc/>
@@ -79,26 +100,34 @@ public sealed class ResumeExporter : IResumeExporter
 
     #region Helpers
 
-    /// <summary>
-    /// Determines the directory path to use for exporting files based on the current settings.
-    /// </summary>
-    /// <remarks>The default directory is located at 'JobTracker\Resumes' within the user's Documents folder
-    /// if no export path is configured.</remarks>
-    /// <returns>A string containing the output directory path. If an export path is specified in the settings, that path is
-    /// returned; otherwise, a default directory under the user's Documents folder is used.</returns>
+/// <summary>
+/// Determines the output directory path to use for exporting resumes based on application settings and environment
+/// variables.
+/// </summary>
+/// <remarks>The method prioritizes the export path specified in the application settings. If not set, it checks
+/// for the 'JOBTRACKER_TAILORED' environment variable. If neither is available, it defaults to a standard directory
+/// within the user's Documents folder. The returned path is never null or whitespace.</remarks>
+/// <returns>A string containing the resolved output directory path. The path is determined by the export path setting, the
+/// JOBTRACKER_TAILORED environment variable, or defaults to the user's Documents folder under 'JobTracker\Resumes'.</returns>
     private string ResolveOutputDirectory() =>
         !string.IsNullOrWhiteSpace(_settings.ExportPath)
             ? _settings.ExportPath
-            : Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "JobTracker",
-                "Resumes");
+            : !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("JOBTRACKER_TAILORED"))
+                ? Environment.GetEnvironmentVariable("JOBTRACKER_TAILORED")!
+                : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "JobTracker", "Resumes");
 
-    internal static string BuildFileName(ScrapedJob job)
+    internal static string BuildResumeFileName(ScrapedJob job)
     {
         var safeTitle = SanitizeForFileName(job.Title ?? "Unknown");
         var date = DateTime.Now.ToString("yyyy-MM-dd");
         return $"Resume_{safeTitle}_{job.JobId}_{date}.docx";
+    }
+
+    internal static string BuildCoverLetterFileName(ScrapedJob job)
+    {
+        var safeTitle = SanitizeForFileName(job.Title ?? "Unknown");
+        var date = DateTime.Now.ToString("yyyy-MM-dd");
+        return $"CoverLetter_{safeTitle}_{job.JobId}_{date}.docx";
     }
 
     /// <summary>

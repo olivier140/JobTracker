@@ -564,7 +564,9 @@ public partial class MainForm : Form
             var result = await _exporter.ExportAsync(id);
             if (result.Success)
             {
-                Log($"Exported: {result.FilePath}");
+                Log($"Exported resume: {result.FilePath}");
+                if (result.CoverLetterFilePath != null)
+                    Log($"Exported cover letter: {result.CoverLetterFilePath}");
 
                 // Send export notification to the bus
                 try
@@ -585,6 +587,7 @@ public partial class MainForm : Form
                         Score = match.Score,
                         RecommendApply = match.RecommendApply,
                         ExportedFilePath = result.FilePath!,
+                        CoverLetterFilePath = result.CoverLetterFilePath,
                         ExportedAtUtc = DateTime.UtcNow
                     });
                     Log("Export notification sent to bus.");
@@ -594,8 +597,12 @@ public partial class MainForm : Form
                     Log($"Bus notification failed (non-fatal): {busEx.Message}", Color.Orange);
                 }
 
+                var details = result.CoverLetterFilePath != null
+                    ? $"Resume:\n{result.FilePath}\n\nCover Letter:\n{result.CoverLetterFilePath}"
+                    : $"Resume:\n{result.FilePath}";
+
                 if (MessageBox.Show(
-                        $"Resume exported successfully.\n\n{result.FilePath}\n\nOpen folder?",
+                        $"Export complete.\n\n{details}\n\nOpen folder?",
                         "Export Complete", MessageBoxButtons.YesNo, MessageBoxIcon.Information)
                     == DialogResult.Yes)
                 {

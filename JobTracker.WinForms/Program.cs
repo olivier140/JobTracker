@@ -75,6 +75,7 @@ internal static class Program
 
         var endpointConfig = new EndpointConfiguration("JobTracker.WinForms");
         endpointConfig.SendOnly();
+        endpointConfig.UseSerialization<SystemJsonSerializer>();
 
         var transport = new SqlServerTransport(settings.ConnectionString);
         transport.DefaultSchema = "nsb";

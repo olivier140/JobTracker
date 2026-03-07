@@ -20,6 +20,7 @@ var endpointConfig = new EndpointConfiguration("JobTracker.Messaging");
 
 var transport = new SqlServerTransport(appSettings.ConnectionString);
 transport.DefaultSchema = "nsb";
+endpointConfig.UseSerialization<SystemJsonSerializer>();
 endpointConfig.UseTransport(transport);
 
 endpointConfig.Conventions()

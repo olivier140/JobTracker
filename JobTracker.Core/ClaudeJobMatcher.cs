@@ -103,13 +103,11 @@ public class ClaudeJobMatcher : IJobMatcher
         if (score == null) return null;
 
         string? tailored = null;
+        string? coverLetter = null;
         if (score.Score >= minScore)
         {
-            // If the score meets the minimum threshold, a second prompt is sent to Claude to generate a tailored version of the resume
-            // that is optimized for the specific job. The prompt instructs Claude to reorder bullet points, mirror keywords from the job description,
-            // and rewrite the summary section to better align with the role.
-            // The response is expected to be plain text containing the tailored resume.
-            tailored = await CallClaudeAsync(client, $"""
+            // Run resume tailoring and cover letter generation concurrently.
+            var tailorTask = CallClaudeAsync(client, $"""
                 Tailor this resume for the job below.
                 - Reorder bullets by relevance
                 - Mirror JD keywords
@@ -120,10 +118,30 @@ public class ClaudeJobMatcher : IJobMatcher
                 Job: {job.Title}
                 Description: {job.DescriptionFull}
                 """, 2000, ct);
+
+            var coverTask = CallClaudeAsync(client, $"""
+                Write a professional cover letter for this job application.
+                - Start with the candidate's name and contact info (from the resume) as a header
+                - Address it to "Dear Hiring Manager,"
+                - Opening paragraph: reference the specific role and express enthusiasm
+                - Middle paragraph(s): highlight the 2-3 strongest matches between the resume and job
+                - Closing paragraph: call to action and thanks
+                - Sign off with the candidate's name
+                - Keep it to 3-4 paragraphs total
+                Return plain text cover letter only.
+
+                Resume: {resume}
+                Job: {job.Title} at {job.Location}
+                Description: {job.DescriptionFull}
+                """, 1000, ct);
+
+            await Task.WhenAll(tailorTask, coverTask);
+            tailored = tailorTask.Result;
+            coverLetter = coverTask.Result;
         }
 
         // A new JobMatch record is created and populated with the scoring results, including the score, top matches, gaps, recommendation,
-        // and tailored resume. The record is then added to the database context.
+        // tailored resume, and cover letter. The record is then added to the database context.
         // If the score meets or exceeds the minimum threshold, a new ApplicationRecord is also created and associated with the JobMatch.
         // Finally, all changes are saved to the database.
         var match = new JobMatch
@@ -134,6 +152,7 @@ public class ClaudeJobMatcher : IJobMatcher
             GapsJson = JsonSerializer.Serialize(score.Gaps),
             RecommendApply = score.Apply,
             TailoredResume = tailored,
+            CoverLetter = coverLetter,
             EvaluatedAt = DateTime.UtcNow
         };
         db.JobMatches.Add(match);
