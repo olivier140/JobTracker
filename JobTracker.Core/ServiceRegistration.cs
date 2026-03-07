@@ -56,4 +56,20 @@ public static class ServiceRegistration
         await using var db = await factory.CreateDbContextAsync();
         await db.Database.EnsureCreatedAsync();
     }
+
+    /// <summary>
+    /// Ensures the <c>nsb</c> schema exists in the database so that NServiceBus SQL Server
+    /// transport tables can be created there.
+    /// </summary>
+    public static async Task EnsureNsbSchemaAsync(string connectionString)
+    {
+        await using var connection = new Microsoft.Data.SqlClient.SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            IF NOT EXISTS (SELECT 1 FROM sys.schemas WHERE name = 'nsb')
+                EXEC('CREATE SCHEMA nsb');
+            """;
+        await cmd.ExecuteNonQueryAsync();
+    }
 }

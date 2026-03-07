@@ -41,7 +41,12 @@
       "Bash(dotnet build JobTracker.WordExport/JobTracker.WordExport.csproj)",
       "Bash(dotnet build JobTracker.slnx)",
       "Bash(dotnet test JobTracker.Tests/JobTracker.Tests.csproj --filter \"FullyQualifiedName~ResumeExporterTests\" --logger \"console;verbosity=normal\")",
-      "Bash(dotnet build JobTracker.WinForms/JobTracker.WinForms.csproj)"
+      "Bash(dotnet build JobTracker.WinForms/JobTracker.WinForms.csproj)",
+      "WebFetch(domain:docs.particular.net)",
+      "Bash(dotnet build JobTracker.Messaging/JobTracker.Messaging.csproj)",
+      "WebFetch(domain:www.nuget.org)",
+      "Bash(dotnet build JobTracker.Console/JobTracker.Console.csproj)",
+      "Bash(dotnet test JobTracker.Tests/JobTracker.Tests.csproj --verbosity normal)"
     ]
   }
 }

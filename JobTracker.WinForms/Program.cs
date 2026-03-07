@@ -1,10 +1,12 @@
 // JobTracker.WinForms/Program.cs
 using JobTracker.Core;
+using JobTracker.Core.Commands;
 using JobTracker.WordExport;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NServiceBus;
 
 /// <summary>
 /// Provides the entry point and application-wide service provider for the JobTracker application.
@@ -67,11 +69,33 @@ internal static class Program
         services.AddLogging();
         services.AddJobTrackerCore(settings);
         services.AddWordExport();
+
+        // Configure NServiceBus send-only endpoint for export notifications
+        await ServiceRegistration.EnsureNsbSchemaAsync(settings.ConnectionString);
+
+        var endpointConfig = new EndpointConfiguration("JobTracker.WinForms");
+        endpointConfig.SendOnly();
+
+        var transport = new SqlServerTransport(settings.ConnectionString);
+        transport.DefaultSchema = "nsb";
+        var routing = endpointConfig.UseTransport(transport);
+        routing.RouteToEndpoint(typeof(ResumeExportedCommand), "JobTracker.Messaging");
+
+        endpointConfig.Conventions()
+            .DefiningCommandsAs(type => type.Namespace == "JobTracker.Core.Commands");
+
+        endpointConfig.EnableInstallers();
+
+        var endpointInstance = await Endpoint.Start(endpointConfig);
+        services.AddSingleton<IMessageSession>(endpointInstance);
+
         services.AddTransient<MainForm>();
         Services = services.BuildServiceProvider();
 
         await ServiceRegistration.EnsureDatabaseAsync(Services);
 
         Application.Run(Services.GetRequiredService<MainForm>());
+
+        await endpointInstance.Stop();
     }
 }
