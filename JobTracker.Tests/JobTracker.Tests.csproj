@@ -22,6 +22,7 @@
     <ProjectReference Include="..\JobTracker.Core\JobTracker.Core.csproj" />
     <ProjectReference Include="..\JobTracker.Service\JobTracker.Service.csproj" />
     <ProjectReference Include="..\JobTracker.WordExport\JobTracker.WordExport.csproj" />
+    <ProjectReference Include="..\JobTracker.Messaging\JobTracker.Messaging.csproj" />
   </ItemGroup>
 
 </Project>

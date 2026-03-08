@@ -1,7 +1,9 @@
 ﻿// JobTracker.WinForms/MainForm.cs
 using JobTracker.Core;
+using JobTracker.Core.Commands;
 using JobTracker.WordExport;
 using Microsoft.EntityFrameworkCore;
+using NServiceBus;
 using System.Diagnostics;
 
 /// <summary>
@@ -20,8 +22,9 @@ public partial class MainForm : Form
     private readonly IJobMatcher _matcher;
     private readonly AppSettings _settings;
     private readonly IResumeExporter _exporter;
+    private readonly IMessageSession _bus;
 
-    #region Controls 
+    #region Controls
 
     private TabControl _tabs = null!;
     private DataGridView _gridJobs = null!;
@@ -50,18 +53,21 @@ public partial class MainForm : Form
     /// <param name="matcher">The job matcher used to match job postings to user criteria. Cannot be null.</param>
     /// <param name="settings">The application settings that configure the behavior of the form. Cannot be null.</param>
     /// <param name="exporter">The resume exporter used to write tailored resumes to Word documents. Cannot be null.</param>
+    /// <param name="bus">The NServiceBus message session used to send export notification commands. Cannot be null.</param>
     public MainForm(
         IDbContextFactory<JobTrackerDbContext> dbFactory,
         IJobScraper scraper,
         IJobMatcher matcher,
         AppSettings settings,
-        IResumeExporter exporter)
+        IResumeExporter exporter,
+        IMessageSession bus)
     {
         _dbFactory = dbFactory;
         _scraper = scraper;
         _matcher = matcher;
         _settings = settings;
         _exporter = exporter;
+        _bus = bus;
 
         InitializeComponent();
         WireEvents();
@@ -558,9 +564,45 @@ public partial class MainForm : Form
             var result = await _exporter.ExportAsync(id);
             if (result.Success)
             {
-                Log($"Exported: {result.FilePath}");
+                Log($"Exported resume: {result.FilePath}");
+                if (result.CoverLetterFilePath != null)
+                    Log($"Exported cover letter: {result.CoverLetterFilePath}");
+
+                // Send export notification to the bus
+                try
+                {
+                    await using var db = await _dbFactory.CreateDbContextAsync();
+                    var match = await db.JobMatches
+                        .Include(m => m.ScrapedJob)
+                        .FirstAsync(m => m.Id == id);
+
+                    await _bus.Send(new ResumeExportedCommand
+                    {
+                        ScrapedJobId = match.ScrapedJob!.Id,
+                        JobId = match.ScrapedJob.JobId,
+                        JobTitle = match.ScrapedJob.Title,
+                        JobLocation = match.ScrapedJob.Location,
+                        JobUrl = match.ScrapedJob.Url,
+                        JobMatchId = match.Id,
+                        Score = match.Score,
+                        RecommendApply = match.RecommendApply,
+                        ExportedFilePath = result.FilePath!,
+                        CoverLetterFilePath = result.CoverLetterFilePath,
+                        ExportedAtUtc = DateTime.UtcNow
+                    });
+                    Log("Export notification sent to bus.");
+                }
+                catch (Exception busEx)
+                {
+                    Log($"Bus notification failed (non-fatal): {busEx.Message}", Color.Orange);
+                }
+
+                var details = result.CoverLetterFilePath != null
+                    ? $"Resume:\n{result.FilePath}\n\nCover Letter:\n{result.CoverLetterFilePath}"
+                    : $"Resume:\n{result.FilePath}";
+
                 if (MessageBox.Show(
-                        $"Resume exported successfully.\n\n{result.FilePath}\n\nOpen folder?",
+                        $"Export complete.\n\n{details}\n\nOpen folder?",
                         "Export Complete", MessageBoxButtons.YesNo, MessageBoxIcon.Information)
                     == DialogResult.Yes)
                 {
